@@ -37,11 +37,11 @@ namespace XingeApp
             this.m_pushID = 0;
         }
 
-        public void setTitle(String title)
+        public void setTitle(string title)
         {
             this.m_title = title;
         }
-        public void setContent(String content)
+        public void setContent(string content)
         {
             this.m_content = content;
         }
@@ -53,11 +53,11 @@ namespace XingeApp
         {
             return this.m_expireTime;
         }
-        public void setSendTime(String sendTime)
+        public void setSendTime(string sendTime)
         {
             this.m_sendTime = sendTime;
         }
-        public String getSendTime()
+        public string getSendTime()
         {
             return this.m_sendTime;
         }
@@ -99,11 +99,11 @@ namespace XingeApp
         {
             this.m_action = action;
         }
-        public void setCustom(Dictionary<String, Object> custom)
+        public void setCustom(Dictionary<string, object> custom)
         {
             this.m_custom = custom;
         }
-        public void setRaw(String raw)
+        public void setRaw(string raw)
         {
             this.m_raw = raw;
         }
@@ -133,7 +133,7 @@ namespace XingeApp
             return m_pushID;
         }
 
-        public Boolean isValid()
+        public bool isValid()
         {
             if (m_raw.Length != 0)
                 return true;

@@ -19,7 +19,7 @@ namespace XingeApp
             this.m_endMin = endMin;
         }
 
-        public Boolean isValid()
+        public bool isValid()
         {
             if (this.m_startHour >= 0 && this.m_startHour <= 23 &&
             this.m_startMin >= 0 && this.m_startMin <= 59 &&

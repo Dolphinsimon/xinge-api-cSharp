@@ -38,7 +38,7 @@ namespace XingeApp
         }
 
 
-        public Boolean isValid()
+        public bool isValid()
         {
             if (m_actionType < TYPE_ACTIVITY || m_actionType > TYPE_INTENT)
                 return false;

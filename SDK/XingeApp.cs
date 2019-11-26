@@ -6,12 +6,10 @@ using System.Security.Cryptography;
 using System.Web;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using System.Net;
-using System.IO;
-using System.Net.Cache;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace XingeApp
 {
@@ -46,8 +44,8 @@ namespace XingeApp
         public static string RestapiDeletetokenofaccount = "http://openapi.xg.qq.com/v2/application/del_app_account_tokens";
         public static string RestapiDeletealltokensofaccount = "http://openapi.xg.qq.com/v2/application/del_app_account_all_tokens";
 
-        private static string _xgPushServierHost = "https://openapi.xg.qq.com";
-        private static string _xgPushAppPath = "/v3/push/app";
+        private static readonly string _xgPushServierHost = "https://openapi.xg.qq.com";
+        private static readonly string _xgPushAppPath = "/v3/push/app";
         ///<summery> 此枚举只有在iOS平台上使用，对应于App的所处的环境
         ///</summery>
         public enum PushEnvironmentofiOS {
@@ -56,24 +54,22 @@ namespace XingeApp
         }
 
         public static long IOsMinId = 2200000000L;
-
-        private long m_xgPushAppAccessKey;
-        private string m_xgPushAppSecretKey;
+        private readonly long m_xgPushAppAccessKey;
+        private readonly string m_xgPushAppSecretKey;
         //V3版本新增APP ID 字段，用来标识应用的ID
-        private string m_xgPushAppId;
-
-        private HttpClient m_client;
+        private readonly string m_xgPushAppId;
+        private readonly HttpClient m_client;
 
         /// <summery>对于V3版本的接口，信鸽服务器要求必须添加应用标识，即APPID，可以在前端网页的应用配置中查询
         /// <param name = "appId"> V3版本接口中对应用的标识 </param>
         /// <param name = "accessId"> V2版本接口中系统自动生成的标识 </param>
         /// <param name = "secretKey"> 用于API调用的秘钥 </param>
         /// </summery>
-        public XingeApp(string appId, long accessId, string secretKey,IHttpClientFactory clientFactory)
+        public XingeApp(IConfiguration config,IHttpClientFactory clientFactory)
         {
-            this.m_xgPushAppId        = appId;
-            this.m_xgPushAppAccessKey = accessId;
-            this.m_xgPushAppSecretKey = secretKey;
+            m_xgPushAppId = config.GetSection("XingeApp")["AppId"];
+            m_xgPushAppAccessKey = long.Parse(config.GetSection("XingeApp")["AccessKey"]);
+            m_xgPushAppSecretKey = config.GetSection("XingeApp")["SecretKey"];
             m_client = clientFactory.CreateClient();
             m_client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Basic ", Base64AuthStringOfXgPush());
@@ -92,25 +88,25 @@ namespace XingeApp
             return builder.ToString();
         }
 
-        protected Boolean IsValidToken(string token)
+        protected bool IsValidToken(string token)
         {
-            if (this.m_xgPushAppAccessKey > IOsMinId)
+            if (m_xgPushAppAccessKey > IOsMinId)
                 return token.Length == 64;
             else
                 return (token.Length == 40 || token.Length == 64);
         }
 
-        protected Boolean IsValidMessageType(Message msg)
+        protected bool IsValidMessageType(Message msg)
         {
-            if (this.m_xgPushAppAccessKey < IOsMinId)
+            if (m_xgPushAppAccessKey < IOsMinId)
                 return true;
             else
                 return false;
         }
 
-        protected Boolean IsValidMessageType(MessageiOS message, PushEnvironmentofiOS environment)
+        protected bool IsValidMessageType(MessageiOS message, PushEnvironmentofiOS environment)
         {
-            if (this.m_xgPushAppAccessKey >= IOsMinId && (environment == PushEnvironmentofiOS.Product || environment == PushEnvironmentofiOS.Develop))
+            if (m_xgPushAppAccessKey >= IOsMinId && (environment == PushEnvironmentofiOS.Product || environment == PushEnvironmentofiOS.Develop))
                 return true;
             else
                 return false;
@@ -121,7 +117,7 @@ namespace XingeApp
             Dictionary<string, object> param = new Dictionary<string, object>();
             // DateTime Epoch = new DateTime(1970, 1, 1);
             // long timestamp = (long)(DateTime.UtcNow - Epoch).TotalMilliseconds;
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             return param;
         }
@@ -146,7 +142,7 @@ namespace XingeApp
                 paramStr += kvp.Key + "=" + kvp.Value.ToString();
             }
             Uri u = new Uri(url);
-            md5Str = method + u.Host + u.AbsolutePath + paramStr + this.m_xgPushAppSecretKey;
+            md5Str = method + u.Host + u.AbsolutePath + paramStr + m_xgPushAppSecretKey;
             md5Str = HttpUtility.UrlDecode(md5Str);
             MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
             byte[] encryptedBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(md5Str));
@@ -160,7 +156,7 @@ namespace XingeApp
         }
 
         private string Base64AuthStringOfXgPush() {
-            byte[] bytes = Encoding.ASCII.GetBytes(this.m_xgPushAppId + ":" + this.m_xgPushAppSecretKey);
+            byte[] bytes = Encoding.ASCII.GetBytes(m_xgPushAppId + ":" + m_xgPushAppSecretKey);
             return Convert.ToBase64String(bytes);
         }
 
@@ -397,7 +393,7 @@ namespace XingeApp
             param.Add("message", message.toJson());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             // string ret = callRestful(XingeApp.RESTAPI_PUSHSINGLEDEVICE, param);
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -425,7 +421,7 @@ namespace XingeApp
             param.Add("message", message.toJson());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             // string ret = callRestful(XingeApp.RESTAPI_PUSHSINGLEDEVICE, param);
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -467,8 +463,8 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            System.Console.WriteLine(param);
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            Console.WriteLine(param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -505,7 +501,7 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -536,7 +532,7 @@ namespace XingeApp
             param.Add("message_type", message.getType());
             param.Add("message", message.toJson());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -572,7 +568,7 @@ namespace XingeApp
             param.Add("message", message.toJson());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             param.Add("environment", environment);
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -599,7 +595,7 @@ namespace XingeApp
             param.Add("message", message.toJson());
             param.Add("push_id", message.getPushID().ToString());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -631,7 +627,7 @@ namespace XingeApp
             param.Add("push_id", message.getPushID().ToString());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             param.Add("environment", environment);
-            string ret =await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret =await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -648,7 +644,7 @@ namespace XingeApp
             Dictionary<string, object> param = new Dictionary<string, object>();
             param.Add("audience_type", "all");
             param.Add("platform", "android");
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("expire_time", message.getExpireTime());
             param.Add("send_time", message.getSendTime());
             param.Add("multi_pkg", message.getMultiPkg());
@@ -660,7 +656,7 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret =await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret =await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -694,7 +690,7 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -733,7 +729,7 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -775,7 +771,7 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret = await RequestXgServerV3(XingeApp._xgPushServierHost, XingeApp._xgPushAppPath, param);
+            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -783,7 +779,7 @@ namespace XingeApp
         public async Task<string> QueryPushStatus(List<string> pushIdList)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             JArray ja = new JArray();
             foreach (string pushId in pushIdList)
@@ -793,7 +789,7 @@ namespace XingeApp
                 ja.Add(jo);
             }
             param.Add("push_ids", ja.ToString());
-            string ret = await CallRestful(XingeApp.RestapiQuerypushstatus, param);
+            string ret = await CallRestful(RestapiQuerypushstatus, param);
             return ret;
         }
 
@@ -801,9 +797,9 @@ namespace XingeApp
         private async Task<string> QueryDeviceCount()
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await CallRestful(XingeApp.RestapiQuerydevicecount, param);
+            string ret = await CallRestful(RestapiQuerydevicecount, param);
             return ret;
         }
 
@@ -816,11 +812,11 @@ namespace XingeApp
         public async Task<string> QueryTags(int start, int limit)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("start", start);
             param.Add("limit", limit);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await CallRestful(XingeApp.RestapiQuerytags, param);
+            string ret = await CallRestful(RestapiQuerytags, param);
             return ret;
         }
 
@@ -841,10 +837,10 @@ namespace XingeApp
         public async Task<string> QueryTagTokenNum(string tag)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("tag", tag);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await CallRestful(XingeApp.RestapiQuerytagtokennum, param);
+            string ret = await CallRestful(RestapiQuerytagtokennum, param);
             return ret;
         }
 
@@ -856,11 +852,11 @@ namespace XingeApp
         public async Task<string> QueryTokenTags(string deviceToken)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("device_token", deviceToken);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
 
-            string ret = await CallRestful(XingeApp.RestapiQuerytokentags, param);
+            string ret = await CallRestful(RestapiQuerytokentags, param);
             return ret;
         }
 
@@ -872,11 +868,11 @@ namespace XingeApp
         public async Task<string> CancelTimingPush(string pushId)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("push_id", pushId);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
 
-            string ret = await CallRestful(XingeApp.RestapiCanceltimingpush, param);
+            string ret = await CallRestful(RestapiCanceltimingpush, param);
             return ret;
         }
 
@@ -885,12 +881,12 @@ namespace XingeApp
         {
             foreach (TagTokenPair pair in tagTokenPairs)
             {
-                if(!this.IsValidToken(pair.token))
+                if(!IsValidToken(pair.token))
                 {
                     return string.Format("{\"ret_code\":-1,\"err_msg\":\"invalid token %s\"}", pair.token);
                 }
             }
-            Dictionary<string, object> param = this.InitParams();
+            Dictionary<string, object> param = InitParams();
             List<List<string>> tagTokenPair = new List<List<string>>();
             foreach (TagTokenPair pair in tagTokenPairs)
             {
@@ -901,7 +897,7 @@ namespace XingeApp
             }
             var json = JsonConvert.SerializeObject(tagTokenPair);
             param.Add("tag_token_list", json);
-            string ret = await CallRestful(XingeApp.RestapiBatchsettag, param);
+            string ret = await CallRestful(RestapiBatchsettag, param);
             return ret;
         }
 
@@ -910,12 +906,12 @@ namespace XingeApp
         {
             foreach (TagTokenPair pair in tagTokenPairs)
             {
-                if (!this.IsValidToken(pair.token))
+                if (!IsValidToken(pair.token))
                 {
                     return string.Format("{\"ret_code\":-1,\"err_msg\":\"invalid token %s\"}", pair.token);
                 }
             }
-            Dictionary<string, object> param = this.InitParams();
+            Dictionary<string, object> param = InitParams();
             List<List<string>> tagTokenPair = new List<List<string>>();
             foreach (TagTokenPair pair in tagTokenPairs)
             {
@@ -926,7 +922,7 @@ namespace XingeApp
             }
             var json = JsonConvert.SerializeObject(tagTokenPair);
             param.Add("tag_token_list", json);
-            string ret = await CallRestful(XingeApp.RestapiBatchdeltag, param);
+            string ret = await CallRestful(RestapiBatchdeltag, param);
             return ret;
         }
 
@@ -938,11 +934,11 @@ namespace XingeApp
         private async Task<string> QueryInfoOfToken(string deviceToken)
         {
             Dictionary < string, object > param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("device_token", deviceToken);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
 
-            string ret = await CallRestful(XingeApp.RestapiQueryinfooftoken, param);
+            string ret = await CallRestful(RestapiQueryinfooftoken, param);
             return ret;
         }
 
@@ -954,11 +950,11 @@ namespace XingeApp
         private async Task<string> QueryTokensOfAccount(string account)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("account", account);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
 
-            string ret = await  CallRestful(XingeApp.RestapiQuerytokensofaccount, param);
+            string ret = await  CallRestful(RestapiQuerytokensofaccount, param);
             return ret;
         }
 
@@ -968,15 +964,15 @@ namespace XingeApp
         * @param account 目标账号
         * @param deviceToken 目标设备token
         */
-        public async Task<string> DeleteTokenOfAccount(String account, String deviceToken)
+        public async Task<string> DeleteTokenOfAccount(string account, string deviceToken)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("account", account);
             param.Add("device_token", deviceToken);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
 
-            string ret = await CallRestful(XingeApp.RestapiDeletetokenofaccount, param);
+            string ret = await CallRestful(RestapiDeletetokenofaccount, param);
             return ret;
         }
 
@@ -985,14 +981,14 @@ namespace XingeApp
          *
          * @param account 目标账号
          */
-        private async Task<string> DeleteAllTokensOfAccount(String account)
+        private async Task<string> DeleteAllTokensOfAccount(string account)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", this.m_xgPushAppAccessKey);
+            param.Add("access_id", m_xgPushAppAccessKey);
             param.Add("account", account);
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
 
-            string ret = await CallRestful(XingeApp.RestapiDeletealltokensofaccount, param);
+            string ret = await CallRestful(RestapiDeletealltokensofaccount, param);
             return ret;
         }
     }

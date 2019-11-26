@@ -82,20 +82,20 @@ namespace XingeApp
         {
             return m_styleId;
         }
-        public String getRingRaw()
+        public string getRingRaw()
         {
             return m_ringRaw;
         }
-        public String getIconRes()
+        public string getIconRes()
         {
             return m_iconRes;
         }
-        public String getSmallIcon()
+        public string getSmallIcon()
         {
             return m_smallIcon;
         }
 
-        public Boolean isValid()
+        public bool isValid()
         {
             if (m_ring < 0 || m_ring > 1) return false;
             if (m_vibrate < 0 || m_vibrate > 1) return false;

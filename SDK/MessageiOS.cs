@@ -196,7 +196,7 @@ namespace XingeApp
             return m_badgeType;
         }
 
-        public Boolean isValid()
+        public bool isValid()
         {
             if (m_raw.Length != 0)
                 return true;
