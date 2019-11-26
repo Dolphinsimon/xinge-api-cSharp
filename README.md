@@ -1,4 +1,5 @@
 # xinge-api-C#
+[![NuGet version (XingeApp)](https://img.shields.io/nuget/v/XingeApp.svg?style=flat-square)](https://www.nuget.org/packages/XingeApp/)
 ## 概述
 [信鸽](http://xg.qq.com) 是腾讯云提供的一款支持**百亿级**消息的移动App推送平台，开发者可以调用C# SDK访问信鸽推送服务。
 
