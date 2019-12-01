@@ -8,6 +8,20 @@
 
 方法二：克隆本git仓库，此项目是使用Visual Studio Code for Mac IDE开发的，其中SDK文件夹下是封装的源码，SDK.Test文件夹下是封装的源码的UT.
 
+从1.1.1版本开始，HTTP请求开始改用IHttpClientFactory实现高效的HTTP连接管理，并且基于Task实现了异步方法。
+在ASP.NETCore项目内可通过依赖注入方式使用：
+1.在Startup.cs的ConfigureServices内添加 
+services.AddHttpClient();
+services.AddSingleton<IXingeApp, XingeApp.XingeApp>();
+2.在你的使用的Service或Controller的构造函数内注入IXingeApp接口；
+
+此外对于部分未传入AppId/AccessKey/SecretKey的方法，实现类内部通过appsettings.json读取相关配置，配置结构如下：
+"XingeApp": {
+    "AppId": "000000",
+    "AccessKey": "00000000000",
+    "SecretKey": "0000000000000000000000"
+  }
+
 ## 接口说明
 信鸽提供的主要推送和查询接口包括3种
 
