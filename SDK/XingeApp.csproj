@@ -1,19 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.0,net6.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/Dolphinsimon/xinge-api-cSharp</PackageProjectUrl>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
+    <AssemblyVersion>1.1.2.0</AssemblyVersion>
+    <FileVersion>1.1.2.0</FileVersion>
     <RepositoryUrl>https://github.com/Dolphinsimon/xinge-api-cSharp</RepositoryUrl>
     <PackageTags>Xinge,Tencent,Push,SDK</PackageTags>
     <Description>A fork of official https://github.com/xingePush/xinge-api-cSharp</Description>
     <RepositoryType>A fork of official https://github.com/xingePush/xinge-api-cSharp</RepositoryType>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
     <Authors>XingeApp</Authors>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Http" Version="3.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 </Project>

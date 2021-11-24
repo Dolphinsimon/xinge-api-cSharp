@@ -6,13 +6,14 @@ namespace SDK.Test
 {
     public class UnitTest1
     {
+
          [Fact]
         public void TestPushTokenOfiOS()
         {
             string result = null;
             Random random = new Random();
             int messageIndex = random.Next(9999);
-            result = XingeApp.XingeApp.PushTokeniOs("5412567459229", 2200262432, "24f595178abda55aa74dc2ce4033d600", "CSharpSDK " + messageIndex,"1043b93f56334bf010d40ccefa1244d8557a45161d55ff3ecbb7e1b13e192f65", XingeApp.XingeApp.PushEnvironmentofiOs.Develop);
+            result = XingeApp.XingeApp.PushTokeniOS("5412567459229", 2200262432, "24f595178abda55aa74dc2ce4033d600", "CSharpSDK " + messageIndex,"1043b93f56334bf010d40ccefa1244d8557a45161d55ff3ecbb7e1b13e192f65", XingeApp.XingeApp.PushEnvironmentofiOs.Develop);
             Console.WriteLine(result);
         }
         [Fact]
@@ -30,7 +31,7 @@ namespace SDK.Test
             string result = null;
             Random random = new Random();
             int messageIndex = random.Next(9999);
-            result = XingeApp.XingeApp.PushAccountiOs("5412567459229", 2200262432, "24f595178abda55aa74dc2ce4033d600", "CSharpSDK " + messageIndex,"your test account", XingeApp.XingeApp.PushEnvironmentofiOs.Develop);
+            result = XingeApp.XingeApp.PushAccountiOS("5412567459229", 2200262432, "24f595178abda55aa74dc2ce4033d600", "CSharpSDK " + messageIndex,"your test account", XingeApp.XingeApp.PushEnvironmentofiOs.Develop);
             Console.WriteLine(result);
         }
         [Fact]
@@ -48,7 +49,7 @@ namespace SDK.Test
             string result = null;
             Random random = new Random();
             int messageIndex = random.Next(9999);
-            result = XingeApp.XingeApp.PushTagiOs("5412567459229", 2200262432, "24f595178abda55aa74dc2ce4033d600", "CSharpSDK " + messageIndex,"your_test_tag", XingeApp.XingeApp.PushEnvironmentofiOs.Develop);
+            result = XingeApp.XingeApp.PushTagiOS("5412567459229", 2200262432, "24f595178abda55aa74dc2ce4033d600", "CSharpSDK " + messageIndex,"your_test_tag", XingeApp.XingeApp.PushEnvironmentofiOs.Develop);
             Console.WriteLine(result);
         }
         
@@ -68,7 +69,7 @@ namespace SDK.Test
             string result = null;
             Random random = new Random();
             int messageIndex = random.Next(9999);
-            result = XingeApp.XingeApp.PushAlliOs("5412567459229", 2200262432, "24f595178abda55aa74dc2ce4033d600", "CSharpSDK " + messageIndex, XingeApp.XingeApp.PushEnvironmentofiOs.Develop);
+            result = XingeApp.XingeApp.PushAlliOS("5412567459229", 2200262432, "24f595178abda55aa74dc2ce4033d600", "CSharpSDK " + messageIndex, XingeApp.XingeApp.PushEnvironmentofiOs.Develop);
             Console.WriteLine(result);
         }
         [Fact]

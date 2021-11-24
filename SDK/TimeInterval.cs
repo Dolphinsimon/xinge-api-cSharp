@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 
 namespace XingeApp
@@ -13,28 +12,25 @@ namespace XingeApp
 
         public TimeInterval(int startHour, int startMin, int endHour, int endMin)
         {
-            this.m_startHour = startHour;
-            this.m_startMin = startMin;
-            this.m_endHour = endHour;
-            this.m_endMin = endMin;
+            m_startHour = startHour;
+            m_startMin = startMin;
+            m_endHour = endHour;
+            m_endMin = endMin;
         }
 
         public bool isValid()
         {
-            if (this.m_startHour >= 0 && this.m_startHour <= 23 &&
-            this.m_startMin >= 0 && this.m_startMin <= 59 &&
-            this.m_endHour >= 0 && this.m_endHour <= 23 &&
-            this.m_endMin >= 0 && this.m_endMin <= 59)
-                return true;
-            else
-                return false;
+            return m_startHour >= 0 && m_startHour <= 23 &&
+                   m_startMin >= 0 && m_startMin <= 59 &&
+                   m_endHour >= 0 && m_endHour <= 23 &&
+                   m_endMin >= 0 && m_endMin <= 59;
         }
 
         public Dictionary<string,object> toJson()
         {
-            Dictionary<string, object> dict = new Dictionary<string, object>();
-            Dictionary<string, object> start = new Dictionary<string, object>();
-            Dictionary<string, object> end = new Dictionary<string, object>();
+            var dict = new Dictionary<string, object>();
+            var start = new Dictionary<string, object>();
+            var end = new Dictionary<string, object>();
             start.Add("hour",m_startHour.ToString());
             start.Add("min",m_startMin.ToString());
             end.Add("hour",m_endHour.ToString());

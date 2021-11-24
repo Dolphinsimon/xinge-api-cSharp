@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 
 namespace XingeApp
@@ -24,60 +23,59 @@ namespace XingeApp
 
         public Message()
         {
-            this.m_title = "";
-            this.m_content = "";
-            this.m_sendTime = "";
-            this.m_acceptTimes = new List<TimeInterval>();
-            this.m_multiPkg = 0;
-            this.m_raw = "";
-            this.m_loopInterval = -1;
-            this.m_loopTimes = -1;
-            this.m_action = new ClickAction();
-            this.m_style = new Style(0);
-            this.m_pushID = 0;
+            m_title = "";
+            m_content = "";
+            m_sendTime = "";
+            m_acceptTimes = new List<TimeInterval>();
+            m_multiPkg = 0;
+            m_raw = "";
+            m_loopInterval = -1;
+            m_loopTimes = -1;
+            m_action = new ClickAction();
+            m_style = new Style(0);
+            m_pushID = 0;
         }
 
         public void setTitle(string title)
         {
-            this.m_title = title;
+            m_title = title;
         }
         public void setContent(string content)
         {
-            this.m_content = content;
+            m_content = content;
         }
         public void setExpireTime(int expireTime)
         {
-            this.m_expireTime = expireTime;
+            m_expireTime = expireTime;
         }
         public int getExpireTime()
         {
-            return this.m_expireTime;
+            return m_expireTime;
         }
         public void setSendTime(string sendTime)
         {
-            this.m_sendTime = sendTime;
+            m_sendTime = sendTime;
         }
         public string getSendTime()
         {
-            return this.m_sendTime;
+            return m_sendTime;
         }
         public void addAcceptTime(TimeInterval acceptTime)
         {
-            this.m_acceptTimes.Add(acceptTime);
+            m_acceptTimes.Add(acceptTime);
         }
         public JArray acceptTimeToJsonArray()
         {
-            JArray json = new JArray();
-            foreach (TimeInterval ti in m_acceptTimes)
+            var json = new JArray();
+            foreach (var jtemp in m_acceptTimes.Select(ti => JObject.FromObject(ti.toJson())))
             {
-                JObject jtemp = JObject.FromObject(ti.toJson());
                 json.Add(jtemp);
             }
             return json;
         }
         public void setType(string type)
         {
-            this.m_type = type;
+            m_type = type;
         }
         public string getType()
         {
@@ -85,7 +83,7 @@ namespace XingeApp
         }
         public void setMultiPkg(int multiPkg)
         {
-            this.m_multiPkg = multiPkg;
+            m_multiPkg = multiPkg;
         }
         public int getMultiPkg()
         {
@@ -93,19 +91,19 @@ namespace XingeApp
         }
         public void setStyle(Style style)
         {
-            this.m_style = style;
+            m_style = style;
         }
         public void setAction(ClickAction action)
         {
-            this.m_action = action;
+            m_action = action;
         }
         public void setCustom(Dictionary<string, object> custom)
         {
-            this.m_custom = custom;
+            m_custom = custom;
         }
         public void setRaw(string raw)
         {
-            this.m_raw = raw;
+            m_raw = raw;
         }
         public int getLoopInterval()
         {
@@ -148,23 +146,19 @@ namespace XingeApp
             }
             if (m_expireTime < 0 || m_expireTime > 3 * 24 * 60 * 60)
                 return false;
-            foreach(TimeInterval ti in m_acceptTimes)
-            {
-                if (!ti.isValid()) return false;
-            }
-            if(m_loopInterval > 0 && m_loopTimes > 0 && ((m_loopTimes - 1) * m_loopInterval + 1) > 15)
+            if (m_acceptTimes.Any(ti => !ti.isValid()))
             {
                 return false;
             }
-            return true;
+            return m_loopInterval <= 0 || m_loopTimes <= 0 || ((m_loopTimes - 1) * m_loopInterval + 1) <= 15;
         }
 
         public object toJson()
         {
             if (m_raw.Length != 0)
                 return m_raw;
-            Dictionary<string, object> dict = new Dictionary<string, object>();
-            Dictionary<string, object> message = new Dictionary<string, object>();
+            var dict = new Dictionary<string, object>();
+            var message = new Dictionary<string, object>();
             
             dict.Add("title", m_title);
             dict.Add("content", m_content);
@@ -191,7 +185,7 @@ namespace XingeApp
                 //
             }
             
-            if (this.m_custom != null)
+            if (m_custom != null)
             {
                 foreach(var kvp in m_custom)
                 {

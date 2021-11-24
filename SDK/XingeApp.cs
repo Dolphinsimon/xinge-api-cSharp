@@ -13,15 +13,15 @@ using Microsoft.Extensions.Configuration;
 
 namespace XingeApp
 {
-    
     /// <summery> 常量均为 API 硬编码，不可修改
     /// </summery>
-    static class XGPushConstants 
+    static class XGPushConstants
     {
         public static string OrdinaryMessage = "notify";
         public static string SilentMessage = "message";
     }
-    public class XingeApp:IXingeApp
+
+    public class XingeApp : IXingeApp
     {
         public static string RestapiPushsingledevice = "http://openapi.xg.qq.com/v2/push/single_device";
         public static string RestapiPushsingleaccount = "http://openapi.xg.qq.com/v2/push/single_account";
@@ -40,22 +40,32 @@ namespace XingeApp
         public static string RestapiQuerytokentags = "http://openapi.xg.qq.com/v2/tags/query_token_tags";
         public static string RestapiQuerytagtokennum = "http://openapi.xg.qq.com/v2/tags/query_tag_token_num";
         public static string RestapiQueryinfooftoken = "http://openapi.xg.qq.com/v2/application/get_app_token_info";
-        public static string RestapiQuerytokensofaccount = "http://openapi.xg.qq.com/v2/application/get_app_account_tokens";
-        public static string RestapiDeletetokenofaccount = "http://openapi.xg.qq.com/v2/application/del_app_account_tokens";
-        public static string RestapiDeletealltokensofaccount = "http://openapi.xg.qq.com/v2/application/del_app_account_all_tokens";
+
+        public static string RestapiQuerytokensofaccount =
+            "http://openapi.xg.qq.com/v2/application/get_app_account_tokens";
+
+        public static string RestapiDeletetokenofaccount =
+            "http://openapi.xg.qq.com/v2/application/del_app_account_tokens";
+
+        public static string RestapiDeletealltokensofaccount =
+            "http://openapi.xg.qq.com/v2/application/del_app_account_all_tokens";
 
         private static readonly string _xgPushServierHost = "https://openapi.xg.qq.com";
         private static readonly string _xgPushAppPath = "/v3/push/app";
+
         ///<summery> 此枚举只有在iOS平台上使用，对应于App的所处的环境
         ///</summery>
-        public enum PushEnvironmentofiOS {
+        public enum PushEnvironmentofiOS
+        {
             Product = 1,
             Develop = 2
         }
 
-        public static long IOsMinId = 2200000000L;
+        public static long iOSMinId = 2200000000L;
         private readonly long m_xgPushAppAccessKey;
+
         private readonly string m_xgPushAppSecretKey;
+
         //V3版本新增APP ID 字段，用来标识应用的ID
         private readonly string m_xgPushAppId;
         private readonly HttpClient m_client;
@@ -65,7 +75,7 @@ namespace XingeApp
         /// <param name = "accessId"> V2版本接口中系统自动生成的标识 </param>
         /// <param name = "secretKey"> 用于API调用的秘钥 </param>
         /// </summery>
-        public XingeApp(IConfiguration config,IHttpClientFactory clientFactory)
+        public XingeApp(IConfiguration config, IHttpClientFactory clientFactory)
         {
             m_xgPushAppId = config.GetSection("XingeApp")["AppId"];
             m_xgPushAppAccessKey = long.Parse(config.GetSection("XingeApp")["AccessKey"]);
@@ -78,96 +88,96 @@ namespace XingeApp
 
         protected string StringToMd5(string inputString)
         {
-            MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            byte[] encryptedBytes = md5.ComputeHash(Encoding.ASCII.GetBytes(inputString));
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < encryptedBytes.Length; i++)
+            var md5 = new MD5CryptoServiceProvider();
+            var encryptedBytes = md5.ComputeHash(Encoding.ASCII.GetBytes(inputString));
+            var builder = new StringBuilder();
+            foreach (var t in encryptedBytes)
             {
-                builder.AppendFormat("{0:x2}", encryptedBytes[i]);
+                builder.AppendFormat("{0:x2}", t);
             }
+
             return builder.ToString();
         }
 
         protected bool IsValidToken(string token)
         {
-            if (m_xgPushAppAccessKey > IOsMinId)
+            if (m_xgPushAppAccessKey > iOSMinId)
                 return token.Length == 64;
-            else
-                return (token.Length == 40 || token.Length == 64);
+            return (token.Length == 40 || token.Length == 64);
         }
 
         protected bool IsValidMessageType(Message msg)
         {
-            if (m_xgPushAppAccessKey < IOsMinId)
+            if (m_xgPushAppAccessKey < iOSMinId)
                 return true;
-            else
-                return false;
+            return false;
         }
 
         protected bool IsValidMessageType(MessageiOS message, PushEnvironmentofiOS environment)
         {
-            if (m_xgPushAppAccessKey >= IOsMinId && (environment == PushEnvironmentofiOS.Product || environment == PushEnvironmentofiOS.Develop))
+            if (m_xgPushAppAccessKey >= iOSMinId && (environment == PushEnvironmentofiOS.Product ||
+                                                     environment == PushEnvironmentofiOS.Develop))
                 return true;
-            else
-                return false;
+            return false;
         }
 
         protected Dictionary<string, object> InitParams()
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            // DateTime Epoch = new DateTime(1970, 1, 1);
-            // long timestamp = (long)(DateTime.UtcNow - Epoch).TotalMilliseconds;
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                // long timestamp = (long)(DateTime.UtcNow - Epoch).TotalMilliseconds;
+                // DateTime Epoch = new DateTime(1970, 1, 1);
+                { "access_id", m_xgPushAppAccessKey },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
             return param;
         }
 
         protected JArray ToJArray(List<string> strList)
         {
-            JArray ja = new JArray();
-            foreach (string str in strList)
+            var ja = new JArray();
+            foreach (var str in strList)
             {
                 ja.Add(new JValue(str));
             }
+
             return ja;
         }
 
         private string GenerateSign(string method, string url, Dictionary<string, object> param)
         {
-            string paramStr = "";
-            string md5Str = "";
             var dicSort = from objDic in param orderby objDic.Key select objDic;
-            foreach (KeyValuePair<string, object> kvp in dicSort)
-            {
-                paramStr += kvp.Key + "=" + kvp.Value.ToString();
-            }
-            Uri u = new Uri(url);
-            md5Str = method + u.Host + u.AbsolutePath + paramStr + m_xgPushAppSecretKey;
+            var paramStr = dicSort.Aggregate("", (current, kvp) => 
+                current + (kvp.Key + "=" + kvp.Value));
+
+            var u = new Uri(url);
+            var md5Str = method + u.Host + u.AbsolutePath + paramStr + m_xgPushAppSecretKey;
             md5Str = HttpUtility.UrlDecode(md5Str);
-            MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            byte[] encryptedBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(md5Str));
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < encryptedBytes.Length; i++)
+            var md5 = new MD5CryptoServiceProvider();
+            var encryptedBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(md5Str));
+            var builder = new StringBuilder();
+            foreach (var t in encryptedBytes)
             {
-                
-                builder.Append(encryptedBytes[i].ToString("x2"));
+                builder.Append(t.ToString("x2"));
             }
+
             return builder.ToString();
         }
 
-        private string Base64AuthStringOfXgPush() {
-            byte[] bytes = Encoding.ASCII.GetBytes(m_xgPushAppId + ":" + m_xgPushAppSecretKey);
+        private string Base64AuthStringOfXgPush()
+        {
+            var bytes = Encoding.ASCII.GetBytes(m_xgPushAppId + ":" + m_xgPushAppSecretKey);
             return Convert.ToBase64String(bytes);
         }
 
         private async Task<string> CallRestful(string url, Dictionary<string, object> param)
         {
-            string temp = "";
-            string sign = GenerateSign("GET", url, param);
+            var temp = "";
+            var sign = GenerateSign("GET", url, param);
             if (sign.Length == 0)
                 return "generate sign error";
             param.Add("sign", sign);
-            foreach (KeyValuePair<string, object> kvp in param)
+            foreach (var kvp in param)
             {
                 temp += kvp.Key + "=" + HttpUtility.UrlEncode(kvp.Value.ToString()) + "&";
             }
@@ -175,13 +185,14 @@ namespace XingeApp
             try
             {
                 temp = url + "?" + temp.Remove(temp.Length - 1, 1);
-                var request=new HttpRequestMessage(HttpMethod.Get, temp);
-                request.Content.Headers.ContentType=new MediaTypeHeaderValue("application/json");
+                var request = new HttpRequestMessage(HttpMethod.Get, temp);
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 var response = await m_client.SendAsync(request);
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadAsStringAsync();
                 }
+
                 throw new HttpRequestException(response.StatusCode.ToString());
             }
             catch (Exception e)
@@ -190,10 +201,9 @@ namespace XingeApp
             }
         }
 
-        protected async Task<string> RequestXgServerV3(string host, string path, Dictionary<string, object> param) 
+        protected async Task<string> RequestXgServerV3(string host, string path, Dictionary<string, object> param)
         {
-
-            string url = host + path;
+            var url = host + path;
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(
                 JsonConvert.SerializeObject(param), Encoding.UTF8, "application/json");
@@ -203,6 +213,7 @@ namespace XingeApp
             {
                 return await response.Content.ReadAsStringAsync();
             }
+
             throw new HttpRequestException(response.StatusCode.ToString());
         }
 
@@ -217,18 +228,19 @@ namespace XingeApp
         /// <param name = "token"> 接收消息的设备标识 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task< string> PushTokenAndroid(string appId, long accessId, string secretKey, string title, string content, string token)
+        public async Task<string> PushTokenAndroid(string appId, long accessId, string secretKey, string title,
+            string content, string token)
         {
-            Message message = new Message();
+            var message = new Message();
             message.setType(XGPushConstants.OrdinaryMessage);
             message.setTitle(title);
             message.setContent(content);
 
-            string ret = await PushSingleDevice(token, message);
+            var ret = await PushSingleDevice(token, message);
             return (ret);
         }
 
-        
+
         /// <summery>//推送普通消息给指定的设备,限iOS系统使用
         /// <param name = "appId"> V3版本接口中对应用的标识 </param>
         /// <param name = "accessId"> V2版本接口中系统自动生成的标识 </param>
@@ -238,12 +250,13 @@ namespace XingeApp
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushTokeniOS(string appId, long accessId, string secretKey, string content, string token, PushEnvironmentofiOS environment)
+        public async Task<string> PushTokeniOS(string appId, long accessId, string secretKey, string content,
+            string token, PushEnvironmentofiOS environment)
         {
-            MessageiOS message = new MessageiOS();
+            var message = new MessageiOS();
             message.setAlert(content);
 
-            string ret =await PushSingleDevice(token, message, environment);
+            var ret = await PushSingleDevice(token, message, environment);
             return (ret);
         }
 
@@ -256,17 +269,18 @@ namespace XingeApp
         /// <param name = "account"> 接收设备标识绑定的账号 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushAccountAndroid(string appId, long accessId, string secretKey, string title, string content, string account)
+        public async Task<string> PushAccountAndroid(string appId, long accessId, string secretKey, string title,
+            string content, string account)
         {
-            Message message = new Message();
+            var message = new Message();
             message.setType(XGPushConstants.OrdinaryMessage);
             message.setTitle(title);
             message.setContent(content);
-            string ret = await PushSingleAccount(account, message);
+            var ret = await PushSingleAccount(account, message);
             return (ret);
         }
 
-        
+
         /// <summery>//推送普通消息给指定的账号,限iOS系统使用
         /// <param name = "appId"> V3版本接口中对应用的标识 </param>
         /// <param name = "accessId"> V2版本接口中系统自动生成的标识 </param>
@@ -276,12 +290,13 @@ namespace XingeApp
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushAccountiOS(string appId, long accessId, string secretKey, string content, string account, PushEnvironmentofiOS environment)
+        public async Task<string> PushAccountiOS(string appId, long accessId, string secretKey, string content,
+            string account, PushEnvironmentofiOS environment)
         {
-            MessageiOS message = new MessageiOS();
+            var message = new MessageiOS();
             message.setAlert(content);
 
-            string ret = await PushSingleAccount(account, message, environment);
+            var ret = await PushSingleAccount(account, message, environment);
             return (ret);
         }
 
@@ -293,13 +308,14 @@ namespace XingeApp
         /// <param name = "content"> 消息内容 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushAllAndroid(string appId, long accessId, string secretKey, string title, string content)
+        public async Task<string> PushAllAndroid(string appId, long accessId, string secretKey, string title,
+            string content)
         {
-            Message message = new Message();
+            var message = new Message();
             message.setType(XGPushConstants.OrdinaryMessage);
             message.setTitle(title);
             message.setContent(content);
-            string ret = await PushAllDevice(message);
+            var ret = await PushAllDevice(message);
             return (ret);
         }
 
@@ -311,16 +327,17 @@ namespace XingeApp
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushAlliOS(string appId, long accessId, string secretKey, string content, PushEnvironmentofiOS environment)
+        public async Task<string> PushAlliOS(string appId, long accessId, string secretKey, string content,
+            PushEnvironmentofiOS environment)
         {
-            MessageiOS message = new MessageiOS();
+            var message = new MessageiOS();
             message.setAlert(content);
 
-            string ret = await PushAllDevice(message, environment);
+            var ret = await PushAllDevice(message, environment);
             return (ret);
         }
 
-        
+
         /// <summery>//推送普通消息给绑定标签的设备,限Android系统使用
         /// <param name = "appId"> V3版本接口中对应用的标识 </param>
         /// <param name = "accessId"> V2版本接口中系统自动生成的标识 </param>
@@ -330,16 +347,16 @@ namespace XingeApp
         /// <param name = "tag"> 接收设备标识绑定的标签 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushTagAndroid(string appId, long accessId, string secretKey, string title, string content, string tag)
+        public async Task<string> PushTagAndroid(string appId, long accessId, string secretKey, string title,
+            string content, string tag)
         {
-            Message message = new Message();
+            var message = new Message();
             message.setType(XGPushConstants.OrdinaryMessage);
             message.setTitle(title);
             message.setContent(content);
 
-            List<string> tagList = new List<string>();
-            tagList.Add(tag);
-            string ret = await PushTags(tagList, "OR", message);
+            var tagList = new List<string> { tag };
+            var ret = await PushTags(tagList, "OR", message);
             return (ret);
         }
 
@@ -352,14 +369,14 @@ namespace XingeApp
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushTagiOS(string appId, long accessId, string secretKey, string content, string tag, PushEnvironmentofiOS environment)
+        public async Task<string> PushTagiOS(string appId, long accessId, string secretKey, string content, string tag,
+            PushEnvironmentofiOS environment)
         {
-            MessageiOS message = new MessageiOS();
+            var message = new MessageiOS();
             message.setAlert(content);
 
-            List<string> tagList = new List<string>();
-            tagList.Add(tag);
-            string ret = await PushTags(tagList, "OR", message, environment);
+            var tagList = new List<string> { tag };
+            var ret = await PushTags(tagList, "OR", message, environment);
             return (ret);
         }
 
@@ -376,12 +393,13 @@ namespace XingeApp
                 return "message type error!";
             if (!message.isValid())
                 return "message is invalid!";
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "token");
-            param.Add("platform", "android");
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "token" },
+                { "platform", "android" }
+            };
 
-            List <string> tokenList = new List<string>();
-            tokenList.Add(deviceToken);
+            var tokenList = new List<string> { deviceToken };
 
             param.Add("token_list", ToJArray(tokenList));
             // param.Add("access_id", this.xgPushAppAccessKey);
@@ -393,7 +411,7 @@ namespace XingeApp
             param.Add("message", message.toJson());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             // string ret = callRestful(XingeApp.RESTAPI_PUSHSINGLEDEVICE, param);
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -408,20 +426,22 @@ namespace XingeApp
                 return "message type error!";
             if (!message.isValid())
                 return "message is invalid!";
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "token_list");
-            param.Add("platform", "android");
-            param.Add("token_list", ToJArray(deviceTokens));
-            // param.Add("access_id", this.xgPushAppAccessKey);
-            param.Add("expire_time", message.getExpireTime());
-            param.Add("send_time", message.getSendTime());
-            param.Add("multi_pkg", message.getMultiPkg());
-            // param.Add("device_token", devicetoken);
-            param.Add("message_type", message.getType());
-            param.Add("message", message.toJson());
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "token_list" },
+                { "platform", "android" },
+                { "token_list", ToJArray(deviceTokens) },
+                // param.Add("access_id", this.xgPushAppAccessKey);
+                { "expire_time", message.getExpireTime() },
+                { "send_time", message.getSendTime() },
+                { "multi_pkg", message.getMultiPkg() },
+                // param.Add("device_token", devicetoken);
+                { "message_type", message.getType() },
+                { "message", message.toJson() },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
             // string ret = callRestful(XingeApp.RESTAPI_PUSHSINGLEDEVICE, param);
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -431,22 +451,26 @@ namespace XingeApp
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushSingleDevice(string deviceToken, MessageiOS message, PushEnvironmentofiOS environment)
+        public async Task<string> PushSingleDevice(string deviceToken, MessageiOS message,
+            PushEnvironmentofiOS environment)
         {
             if (!IsValidMessageType(message, environment))
             {
                 return "{'ret_code':-1,'err_msg':'message type or environment error!'}";
             }
+
             if (!message.isValid())
             {
                 return "{'ret_code':-1,'err_msg':'message invalid!'}";
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "token");
-            param.Add("platform", "ios");
 
-            List <string> tokenList = new List<string>();
-            tokenList.Add(deviceToken);
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "token" },
+                { "platform", "ios" }
+            };
+
+            var tokenList = new List<string> { deviceToken };
             param.Add("token_list", ToJArray(tokenList));
 
             // param.Add("access_id", this.xgPushAppAccessKey);
@@ -454,7 +478,7 @@ namespace XingeApp
             param.Add("send_time", message.getSendTime());
             // param.Add("device_token", deviceToken);
             param.Add("message_type", "notify");
-            
+
             param.Add("message", message.toJson());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             param.Add("environment", environment);
@@ -463,8 +487,9 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
+
             Console.WriteLine(param);
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -474,34 +499,40 @@ namespace XingeApp
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushMultipleDevices(List<string> deviceTokens, MessageiOS message, PushEnvironmentofiOS environment)
+        public async Task<string> PushMultipleDevices(List<string> deviceTokens, MessageiOS message,
+            PushEnvironmentofiOS environment)
         {
             if (!IsValidMessageType(message, environment))
             {
                 return "{'ret_code':-1,'err_msg':'message type or environment error!'}";
             }
+
             if (!message.isValid())
             {
                 return "{'ret_code':-1,'err_msg':'message invalid!'}";
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "token_list");
-            param.Add("platform", "ios");
-            param.Add("token_list", ToJArray(deviceTokens));
-            // param.Add("access_id", this.xgPushAppAccessKey);
-            param.Add("expire_time", message.getExpireTime());
-            param.Add("send_time", message.getSendTime());
-            // param.Add("device_token", deviceToken);
-            param.Add("message_type", message.getType());
-            param.Add("message", message.toJson());
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            param.Add("environment", environment);
+
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "token_list" },
+                { "platform", "ios" },
+                { "token_list", ToJArray(deviceTokens) },
+                // param.Add("access_id", this.xgPushAppAccessKey);
+                { "expire_time", message.getExpireTime() },
+                { "send_time", message.getSendTime() },
+                // param.Add("device_token", deviceToken);
+                { "message_type", message.getType() },
+                { "message", message.toJson() },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 },
+                { "environment", environment }
+            };
             if (message.getLoopInterval() > 0 && message.getLoopTimes() > 0)
             {
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -516,12 +547,13 @@ namespace XingeApp
                 return "message type error!";
             if (!message.isValid())
                 return "message is invalid!";
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "account");
-            param.Add("platform", "android");
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "account" },
+                { "platform", "android" }
+            };
 
-            List <string> accountList = new List<string>();
-            accountList.Add(account);
+            var accountList = new List<string> { account };
 
             param.Add("account_list", ToJArray(accountList));
             // param.Add("access_id", this.xgPushAppAccessKey);
@@ -532,7 +564,7 @@ namespace XingeApp
             param.Add("message_type", message.getType());
             param.Add("message", message.toJson());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -542,22 +574,26 @@ namespace XingeApp
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushSingleAccount(string account, MessageiOS message, PushEnvironmentofiOS environment)
+        public async Task<string> PushSingleAccount(string account, MessageiOS message,
+            PushEnvironmentofiOS environment)
         {
             if (!IsValidMessageType(message, environment))
             {
                 return "{'ret_code':-1,'err_msg':'message type or environment error!'}";
             }
+
             if (!message.isValid())
             {
                 return "{'ret_code':-1,'err_msg':'message invalid!'}";
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "account");
-            param.Add("platform", "ios");
 
-            List <string> accountList = new List<string>();
-            accountList.Add(account);
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "account" },
+                { "platform", "ios" }
+            };
+
+            var accountList = new List<string> { account };
 
             param.Add("account_list", ToJArray(accountList));
             // param.Add("access_id", this.xgPushAppAccessKey);
@@ -568,7 +604,7 @@ namespace XingeApp
             param.Add("message", message.toJson());
             param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
             param.Add("environment", environment);
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -583,19 +619,21 @@ namespace XingeApp
                 return "message type error!";
             if (!message.isValid())
                 return "message is invalid!";
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "account_list");
-            param.Add("platform", "android");
-            // param.Add("access_id", this.xgPushAppAccessKey);
-            param.Add("expire_time", message.getExpireTime());
-            param.Add("send_time", message.getSendTime());
-            param.Add("multi_pkg", message.getMultiPkg());
-            param.Add("account_list", ToJArray(accountList));
-            param.Add("message_type", message.getType());
-            param.Add("message", message.toJson());
-            param.Add("push_id", message.getPushID().ToString());
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "account_list" },
+                { "platform", "android" },
+                // param.Add("access_id", this.xgPushAppAccessKey);
+                { "expire_time", message.getExpireTime() },
+                { "send_time", message.getSendTime() },
+                { "multi_pkg", message.getMultiPkg() },
+                { "account_list", ToJArray(accountList) },
+                { "message_type", message.getType() },
+                { "message", message.toJson() },
+                { "push_id", message.getPushID().ToString() },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -605,29 +643,34 @@ namespace XingeApp
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushAccountList(List<string> accountList, MessageiOS message, PushEnvironmentofiOS environment)
+        public async Task<string> PushAccountList(List<string> accountList, MessageiOS message,
+            PushEnvironmentofiOS environment)
         {
             if (!IsValidMessageType(message, environment))
             {
                 return "{'ret_code':-1,'err_msg':'message type or environment error!'}";
             }
+
             if (!message.isValid())
             {
                 return "{'ret_code':-1,'err_msg':'message invalid!'}";
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "account_list");
-            param.Add("platform", "ios");
-            // param.Add("access_id", this.xgPushAppAccessKey);
-            param.Add("expire_time", message.getExpireTime());
-            param.Add("send_time", message.getSendTime());
-            param.Add("account_list", ToJArray(accountList));
-            param.Add("message_type", message.getType());
-            param.Add("message", message.toJson());
-            param.Add("push_id", message.getPushID().ToString());
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            param.Add("environment", environment);
-            string ret =await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "account_list" },
+                { "platform", "ios" },
+                // param.Add("access_id", this.xgPushAppAccessKey);
+                { "expire_time", message.getExpireTime() },
+                { "send_time", message.getSendTime() },
+                { "account_list", ToJArray(accountList) },
+                { "message_type", message.getType() },
+                { "message", message.toJson() },
+                { "push_id", message.getPushID().ToString() },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 },
+                { "environment", environment }
+            };
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -641,22 +684,25 @@ namespace XingeApp
                 return "message type error!";
             if (!message.isValid())
                 return "message is invalid!";
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "all");
-            param.Add("platform", "android");
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("expire_time", message.getExpireTime());
-            param.Add("send_time", message.getSendTime());
-            param.Add("multi_pkg", message.getMultiPkg());
-            param.Add("message_type", message.getType());
-            param.Add("message", message.toJson());
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "all" },
+                { "platform", "android" },
+                { "access_id", m_xgPushAppAccessKey },
+                { "expire_time", message.getExpireTime() },
+                { "send_time", message.getSendTime() },
+                { "multi_pkg", message.getMultiPkg() },
+                { "message_type", message.getType() },
+                { "message", message.toJson() },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
             if (message.getLoopInterval() > 0 && message.getLoopTimes() > 0)
             {
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret =await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
@@ -671,31 +717,36 @@ namespace XingeApp
             {
                 return "{'ret_code':-1,'err_msg':'message type or environment error!'}";
             }
+
             if (!message.isValid())
             {
                 return "{'ret_code':-1,'err_msg':'message invalid!'}";
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "all");
-            param.Add("platform", "ios");
-            // param.Add("access_id", this.xgPushAppAccessKey);
-            param.Add("expire_time", message.getExpireTime());
-            param.Add("send_time", message.getSendTime());
-            param.Add("message_type", message.getType());
-            param.Add("message", message.toJson());
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            param.Add("environment", environment);
+
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "all" },
+                { "platform", "ios" },
+                // param.Add("access_id", this.xgPushAppAccessKey);
+                { "expire_time", message.getExpireTime() },
+                { "send_time", message.getSendTime() },
+                { "message_type", message.getType() },
+                { "message", message.toJson() },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 },
+                { "environment", environment }
+            };
             if (message.getLoopInterval() > 0 && message.getLoopTimes() > 0)
             {
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
         /// <summery> 推送消息给绑定标签的设备, 限 Android 系统使用
-        /// <param name = "accountList"> 接收设备标识绑定的标签列表 </param>
+        /// <param name = "tagList"> 接收设备标识绑定的标签列表 </param>
         /// <param name = "tagOp"> 标签集合需要进行的逻辑集合运算标识 </param>
         /// <param name = "message"> Android 消息结构体 </param>
         /// <returns> 推送结果描述 </returns>
@@ -708,17 +759,22 @@ namespace XingeApp
             {
                 return "paramas invalid!";
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "tag");
-            param.Add("platform", "android");
-            // param.Add("access_id", this.xgPushAppAccessKey);
-            param.Add("expire_time", message.getExpireTime());
-            param.Add("send_time", message.getSendTime());
-            param.Add("multi_pkg", message.getMultiPkg());
-            param.Add("message_type", message.getType());
-            Dictionary <string, object> tagListParam = new Dictionary<string, object>();
-            tagListParam.Add("tags",ToJArray(tagList));
-            tagListParam.Add("op", tagOp);
+
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "tag" },
+                { "platform", "android" },
+                // param.Add("access_id", this.xgPushAppAccessKey);
+                { "expire_time", message.getExpireTime() },
+                { "send_time", message.getSendTime() },
+                { "multi_pkg", message.getMultiPkg() },
+                { "message_type", message.getType() }
+            };
+            var tagListParam = new Dictionary<string, object>
+            {
+                { "tags", ToJArray(tagList) },
+                { "op", tagOp }
+            };
             param.Add("tag_list", tagListParam);
             // param.Add("tag_list", toJArray(tagList));
             // param.Add("tags_op", tagOp);
@@ -729,37 +785,45 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
         /// <summery> 推送消息给绑定标签的设备, 限 iOS 系统使用
-        /// <param name = "accountList"> 接收设备标识绑定的标签列表 </param>
+        /// <param name = "tagList"> 接收设备标识绑定的标签列表 </param>
         /// <param name = "tagOp"> 标签集合需要进行的逻辑集合运算标识 </param>
         /// <param name = "message"> iOS 消息结构体 </param>
         /// <param name = "environment"> 指定推送环境 </param>
         /// <returns> 推送结果描述 </returns>
         /// </summery>
-        public async Task<string> PushTags(List<string> tagList, string tagOp, MessageiOS message, PushEnvironmentofiOS environment)
+        public async Task<string> PushTags(List<string> tagList, string tagOp, MessageiOS message,
+            PushEnvironmentofiOS environment)
         {
             if (!IsValidMessageType(message, environment))
             {
                 return "{'ret_code':-1,'err_msg':'message type or environment error!'}";
             }
+
             if (!message.isValid())
             {
                 return "{'ret_code':-1,'err_msg':'message invalid!'}";
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("audience_type", "tag");
-            param.Add("platform", "ios");
-            // param.Add("access_id", this.xgPushAppAccessKey);
-            param.Add("expire_time", message.getExpireTime());
-            param.Add("send_time", message.getSendTime());
-            param.Add("message_type", message.getType());
-            Dictionary <string, object> tagListParam = new Dictionary<string, object>();
-            tagListParam.Add("tags",ToJArray(tagList));
-            tagListParam.Add("op", tagOp);
+
+            var param = new Dictionary<string, object>
+            {
+                { "audience_type", "tag" },
+                { "platform", "ios" },
+                // param.Add("access_id", this.xgPushAppAccessKey);
+                { "expire_time", message.getExpireTime() },
+                { "send_time", message.getSendTime() },
+                { "message_type", message.getType() }
+            };
+            var tagListParam = new Dictionary<string, object>
+            {
+                { "tags", ToJArray(tagList) },
+                { "op", tagOp }
+            };
             param.Add("tag_list", tagListParam);
             // param.Add("tag_list", tagList);
             // param.Add("tags_op", tagOp);
@@ -771,35 +835,40 @@ namespace XingeApp
                 param.Add("loop_interval", message.getLoopInterval());
                 param.Add("loop_times", message.getLoopTimes());
             }
-            string ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
+
+            var ret = await RequestXgServerV3(_xgPushServierHost, _xgPushAppPath, param);
             return ret;
         }
 
         //查询群发消息状态
         public async Task<string> QueryPushStatus(List<string> pushIdList)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            JArray ja = new JArray();
-            foreach (string pushId in pushIdList)
+            var param = new Dictionary<string, object>
             {
-                JObject jo = new JObject();
-                jo.Add("push_id", pushId);
+                { "access_id", m_xgPushAppAccessKey },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
+            var ja = new JArray();
+            foreach (var pushId in pushIdList)
+            {
+                var jo = new JObject { { "push_id", pushId } };
                 ja.Add(jo);
             }
+
             param.Add("push_ids", ja.ToString());
-            string ret = await CallRestful(RestapiQuerypushstatus, param);
+            var ret = await CallRestful(RestapiQuerypushstatus, param);
             return ret;
         }
 
         //查询消息覆盖的设备数
         private async Task<string> QueryDeviceCount()
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await CallRestful(RestapiQuerydevicecount, param);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
+            var ret = await CallRestful(RestapiQuerydevicecount, param);
             return ret;
         }
 
@@ -811,12 +880,14 @@ namespace XingeApp
         */
         public async Task<string> QueryTags(int start, int limit)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("start", start);
-            param.Add("limit", limit);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await CallRestful(RestapiQuerytags, param);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "start", start },
+                { "limit", limit },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
+            var ret = await CallRestful(RestapiQuerytags, param);
             return ret;
         }
 
@@ -836,11 +907,13 @@ namespace XingeApp
         */
         public async Task<string> QueryTagTokenNum(string tag)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("tag", tag);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
-            string ret = await CallRestful(RestapiQuerytagtokennum, param);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "tag", tag },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
+            var ret = await CallRestful(RestapiQuerytagtokennum, param);
             return ret;
         }
 
@@ -851,12 +924,14 @@ namespace XingeApp
         */
         public async Task<string> QueryTokenTags(string deviceToken)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("device_token", deviceToken);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "device_token", deviceToken },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
 
-            string ret = await CallRestful(RestapiQuerytokentags, param);
+            var ret = await CallRestful(RestapiQuerytokentags, param);
             return ret;
         }
 
@@ -867,62 +942,58 @@ namespace XingeApp
         */
         public async Task<string> CancelTimingPush(string pushId)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("push_id", pushId);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "push_id", pushId },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
 
-            string ret = await CallRestful(RestapiCanceltimingpush, param);
+            var ret = await CallRestful(RestapiCanceltimingpush, param);
             return ret;
         }
 
         //批量为token设置标签
         public async Task<string> BatchSetTag(List<TagTokenPair> tagTokenPairs)
         {
-            foreach (TagTokenPair pair in tagTokenPairs)
+            foreach (var pair in tagTokenPairs.Where(pair => !IsValidToken(pair.token)))
             {
-                if(!IsValidToken(pair.token))
+                return string.Format("{\"ret_code\":-1,\"err_msg\":\"invalid token %s\"}", pair.token);
+            }
+
+            var param = InitParams();
+            var tagTokenPair = tagTokenPairs.Select(pair => 
+                new List<string>
                 {
-                    return string.Format("{\"ret_code\":-1,\"err_msg\":\"invalid token %s\"}", pair.token);
-                }
-            }
-            Dictionary<string, object> param = InitParams();
-            List<List<string>> tagTokenPair = new List<List<string>>();
-            foreach (TagTokenPair pair in tagTokenPairs)
-            {
-                List<string> singleTagToken = new List<string>();
-                singleTagToken.Add(pair.tag);
-                singleTagToken.Add(pair.token);;
-                tagTokenPair.Add(singleTagToken);
-            }
+                    pair.tag, 
+                    pair.token
+                }).ToList();
+
             var json = JsonConvert.SerializeObject(tagTokenPair);
             param.Add("tag_token_list", json);
-            string ret = await CallRestful(RestapiBatchsettag, param);
+            var ret = await CallRestful(RestapiBatchsettag, param);
             return ret;
         }
 
         //批量为token删除标签
         public async Task<string> BatchDelTag(List<TagTokenPair> tagTokenPairs)
         {
-            foreach (TagTokenPair pair in tagTokenPairs)
+            foreach (var pair in tagTokenPairs.Where(pair => !IsValidToken(pair.token)))
             {
-                if (!IsValidToken(pair.token))
+                return string.Format("{\"ret_code\":-1,\"err_msg\":\"invalid token %s\"}", pair.token);
+            }
+
+            var param = InitParams();
+            var tagTokenPair = tagTokenPairs.Select(pair => 
+                new List<string>
                 {
-                    return string.Format("{\"ret_code\":-1,\"err_msg\":\"invalid token %s\"}", pair.token);
-                }
-            }
-            Dictionary<string, object> param = InitParams();
-            List<List<string>> tagTokenPair = new List<List<string>>();
-            foreach (TagTokenPair pair in tagTokenPairs)
-            {
-                List<string> singleTagToken = new List<string>();
-                singleTagToken.Add(pair.tag);
-                singleTagToken.Add(pair.token);
-                tagTokenPair.Add(singleTagToken);
-            }
+                    pair.tag, 
+                    pair.token
+                }).ToList();
+
             var json = JsonConvert.SerializeObject(tagTokenPair);
             param.Add("tag_token_list", json);
-            string ret = await CallRestful(RestapiBatchdeltag, param);
+            var ret = await CallRestful(RestapiBatchdeltag, param);
             return ret;
         }
 
@@ -933,12 +1004,14 @@ namespace XingeApp
         */
         private async Task<string> QueryInfoOfToken(string deviceToken)
         {
-            Dictionary < string, object > param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("device_token", deviceToken);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "device_token", deviceToken },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
 
-            string ret = await CallRestful(RestapiQueryinfooftoken, param);
+            var ret = await CallRestful(RestapiQueryinfooftoken, param);
             return ret;
         }
 
@@ -949,12 +1022,14 @@ namespace XingeApp
         */
         private async Task<string> QueryTokensOfAccount(string account)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("account", account);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "account", account },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
 
-            string ret = await  CallRestful(RestapiQuerytokensofaccount, param);
+            var ret = await CallRestful(RestapiQuerytokensofaccount, param);
             return ret;
         }
 
@@ -966,13 +1041,15 @@ namespace XingeApp
         */
         public async Task<string> DeleteTokenOfAccount(string account, string deviceToken)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("account", account);
-            param.Add("device_token", deviceToken);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "account", account },
+                { "device_token", deviceToken },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
 
-            string ret = await CallRestful(RestapiDeletetokenofaccount, param);
+            var ret = await CallRestful(RestapiDeletetokenofaccount, param);
             return ret;
         }
 
@@ -983,12 +1060,14 @@ namespace XingeApp
          */
         private async Task<string> DeleteAllTokensOfAccount(string account)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            param.Add("access_id", m_xgPushAppAccessKey);
-            param.Add("account", account);
-            param.Add("timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000);
+            var param = new Dictionary<string, object>
+            {
+                { "access_id", m_xgPushAppAccessKey },
+                { "account", account },
+                { "timestamp", (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000 }
+            };
 
-            string ret = await CallRestful(RestapiDeletealltokensofaccount, param);
+            var ret = await CallRestful(RestapiDeletealltokensofaccount, param);
             return ret;
         }
     }

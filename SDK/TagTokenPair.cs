@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace XingeApp
+﻿namespace XingeApp
 {
     public class TagTokenPair
     {

@@ -1,7 +1,4 @@
-﻿using System;
-
-
-namespace XingeApp
+﻿namespace XingeApp
 {
     public class Style
     {
@@ -19,35 +16,35 @@ namespace XingeApp
 
         public Style(int builderId)
         {
-            this.m_builderId = builderId;
-            this.m_ring = 0;
-            this.m_vibrate = 0;
-            this.m_clearable = 1;
-            this.m_nId = 0;
-            this.m_lights = 1;
-            this.m_iconType = 0;
-            this.m_styleId = 1;
+            m_builderId = builderId;
+            m_ring = 0;
+            m_vibrate = 0;
+            m_clearable = 1;
+            m_nId = 0;
+            m_lights = 1;
+            m_iconType = 0;
+            m_styleId = 1;
         }
 
         public Style(int builderId, int ring, int vibrate, int clearable, int nId, int lights, int iconType, int styleId)
         {
-            this.m_builderId = builderId;
-            this.m_ring = ring;
-            this.m_vibrate = vibrate;
-            this.m_clearable = clearable;
-            this.m_nId = nId;
-            this.m_lights = lights;
-            this.m_iconType = iconType;
-            this.m_styleId = styleId;
+            m_builderId = builderId;
+            m_ring = ring;
+            m_vibrate = vibrate;
+            m_clearable = clearable;
+            m_nId = nId;
+            m_lights = lights;
+            m_iconType = iconType;
+            m_styleId = styleId;
         }
 
         public Style(int builderId, int ring, int vibrate, int clearable, int nId)
         {
-            this.m_builderId = builderId;
-            this.m_ring = ring;
-            this.m_vibrate = vibrate;
-            this.m_clearable = clearable;
-            this.m_nId = nId;
+            m_builderId = builderId;
+            m_ring = ring;
+            m_vibrate = vibrate;
+            m_clearable = clearable;
+            m_nId = nId;
         }
 
         public int getBuilderId()

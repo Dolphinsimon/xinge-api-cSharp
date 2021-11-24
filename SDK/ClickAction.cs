@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 
 namespace XingeApp
@@ -16,22 +15,26 @@ namespace XingeApp
         private string m_activity;
         private string m_intent;
 
-        public void setActionType(int actionType) { this.m_actionType = actionType; }
-        public void setActivity(string activity) { this.m_activity = activity; }
-        public void setUrl(string url) { this.m_url = url; }
-        public void setConfirmUrl(int confirmUrl) { this.m_confirmUrl = confirmUrl; }
-        public void setIntent(string intent) { this.m_intent = intent; }
+        public void setActionType(int actionType) { m_actionType = actionType; }
+        public void setActivity(string activity) { m_activity = activity; }
+        public void setUrl(string url) { m_url = url; }
+        public void setConfirmUrl(int confirmUrl) { m_confirmUrl = confirmUrl; }
+        public void setIntent(string intent) { m_intent = intent; }
 
         public Dictionary<string,object> toJson()
         {
-           Dictionary<string,object> dict = new Dictionary<string, object>();
-            dict.Add("action_type", m_actionType);
-            dict.Add("activity", m_activity);
-            dict.Add("intent", m_intent);
-            Dictionary<string, object> browser = new Dictionary<string, object>();
-            browser.Add("url", m_url);
-            browser.Add("confirm", m_confirmUrl);
-            dict.Add("browser", browser);
+           var dict = new Dictionary<string, object>
+           {
+               { "action_type", m_actionType },
+               { "activity", m_activity },
+               { "intent", m_intent }
+           };
+           var browser = new Dictionary<string, object>
+           {
+               { "url", m_url },
+               { "confirm", m_confirmUrl }
+           };
+           dict.Add("browser", browser);
 
             //string jsonData = JsonConvert.SerializeObject(dict);
             return dict;
@@ -44,15 +47,11 @@ namespace XingeApp
                 return false;
             if(m_actionType == TYPE_URL)
             {
-                if (m_url.Length == 0 || m_confirmUrl < 0 || m_confirmUrl > 1)
-                    return false;
-                return true;
+                return m_url.Length != 0 && m_confirmUrl >= 0 && m_confirmUrl <= 1;
             }
             if(m_actionType == TYPE_INTENT)
             {
-                if (m_intent.Length == 0)
-                    return false;
-                return true;
+                return m_intent.Length != 0;
             }
             return true;
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace XingeApp
@@ -32,25 +31,25 @@ namespace XingeApp
 
         public MessageiOS()
         {
-            this.m_sendTime = "";
-            this.m_acceptTimes = new List<TimeInterval>();
-            this.m_raw = "";
-            this.m_alertStr = "";
-            this.m_badge = 0;
-            this.m_sound = "";
-            this.m_category = "";
-            this.m_loopInterval = -1;
-            this.m_loopTimes = -1;
-            this.m_type = XGPushConstants.OrdinaryMessage;
-            this.m_title = "";
-            this.m_subtitle = "";
-            this.m_pushID = 0;
-            this.m_badgeType = -1;
+            m_sendTime = "";
+            m_acceptTimes = new List<TimeInterval>();
+            m_raw = "";
+            m_alertStr = "";
+            m_badge = 0;
+            m_sound = "";
+            m_category = "";
+            m_loopInterval = -1;
+            m_loopTimes = -1;
+            m_type = XGPushConstants.OrdinaryMessage;
+            m_title = "";
+            m_subtitle = "";
+            m_pushID = 0;
+            m_badgeType = -1;
         }
 
         public void setType(string type)
         {
-            this.m_type = type;
+            m_type = type;
         }
 
         public string getType()
@@ -60,36 +59,36 @@ namespace XingeApp
 
         public void setExpireTime(int expireTime)
         {
-            this.m_expireTime = expireTime;
+            m_expireTime = expireTime;
         }
 
         public int getExpireTime()
         {
-            return this.m_expireTime;
+            return m_expireTime;
         }
 
         public void setSendTime(string sendTime)
         {
-            this.m_sendTime = sendTime;
+            m_sendTime = sendTime;
         }
 
         public string getSendTime()
         {
-            return this.m_sendTime;
+            return m_sendTime;
         }
 
 
         public void addAcceptTime(TimeInterval acceptTime)
         {
-            this.m_acceptTimes.Add(acceptTime);
+            m_acceptTimes.Add(acceptTime);
         }
 
         public JArray acceptTimeToJsonArray()
         {
-            JArray json = new JArray();
-            foreach (TimeInterval ti in m_acceptTimes)
+            var json = new JArray();
+            foreach (var ti in m_acceptTimes)
             {
-                JObject jtemp = JObject.FromObject(ti.toJson());
+                var jtemp = JObject.FromObject(ti.toJson());
                 json.Add(jtemp);
             }
             return json;
@@ -97,12 +96,12 @@ namespace XingeApp
 
         public void setCustom(Dictionary<string, object> custom)
         {
-            this.m_custom = custom;
+            m_custom = custom;
         }
 
         public void setRaw(string raw)
         {
-            this.m_raw = raw;
+            m_raw = raw;
         }
 
         public void setAlert(string alert)
@@ -123,12 +122,12 @@ namespace XingeApp
         
         public void setTitle(string title) 
         {
-            this.m_title = title;
+            m_title = title;
         }
         
         public void setSubTitle(string title) 
         {
-            this.m_subtitle = title;
+            m_subtitle = title;
         }
 
         public void setSound(string sound)
@@ -204,7 +203,7 @@ namespace XingeApp
                 return false;
             if ( m_type != (XGPushConstants.OrdinaryMessage) && m_type != (XGPushConstants.SilentMessage) && m_type != "0")
                 return false;
-            foreach (TimeInterval ti in m_acceptTimes)
+            foreach (var ti in m_acceptTimes)
             {
                 if (!ti.isValid()) return false;
             }
@@ -219,14 +218,13 @@ namespace XingeApp
         {
             if (m_raw.Length != 0)
                 return m_raw;
-            Dictionary<string,object> dict = new Dictionary<string, object>();
-            dict.Add("accept_time",acceptTimeToJsonArray());
-            Dictionary<string, object> aps = new Dictionary<string, object>();
-            Dictionary<string, object> iOS = new Dictionary<string, object>();
+            var dict = new Dictionary<string, object> { { "accept_time", acceptTimeToJsonArray() } };
+            var aps = new Dictionary<string, object>();
+            var iOS = new Dictionary<string, object>();
 
             if(m_type.Equals(XGPushConstants.OrdinaryMessage) || m_type == "0")
             {
-                Dictionary<string, object> alert = new Dictionary<string, object>();
+                var alert = new Dictionary<string, object>();
                 aps.Add("alert",alert);
                 // aps.Add("badge",m_badge);
                 aps.Add("badge_type", m_badgeType);
@@ -238,15 +236,15 @@ namespace XingeApp
                 {
                     aps.Add("category",m_category);
                 }
-                if (this.m_subtitle.Length != 0)
+                if (m_subtitle.Length != 0)
                 {
-                    iOS.Add("subtitle", this.m_subtitle);
+                    iOS.Add("subtitle", m_subtitle);
                 }
-                if (this.m_title.Length != 0)
+                if (m_title.Length != 0)
                 {
-                    dict.Add("title", this.m_title);
+                    dict.Add("title", m_title);
                 }
-                if (this.m_alertStr.Length != 0)
+                if (m_alertStr.Length != 0)
                 {
                     dict.Add("content", m_alertStr);
                 }
@@ -256,7 +254,7 @@ namespace XingeApp
             }
 
             iOS.Add("aps",aps);
-            if (this.m_custom != null)
+            if (m_custom != null)
             {
                 foreach(var kvp in m_custom)
                 {
