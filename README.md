@@ -1,3 +1,5 @@
+# 腾讯信鸽推送平台已[关闭](https://tencenbigdata.gitbooks.io/xg-docs/content/migration_guide/summary.html)，本项目不再更新。
+
 # xinge-api-C#
 [![NuGet version (XingeApp)](https://img.shields.io/nuget/v/XingeApp.svg?style=flat-square)](https://www.nuget.org/packages/XingeApp/)
 ## 概述
